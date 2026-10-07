@@ -26,3 +26,6 @@ jobs:
 
       - name: Validate Databricks bundle
         run: databricks bundle validate -t dev
+
+      - name: Deploy Databricks bundle
+        run: databricks bundle deploy -t dev
