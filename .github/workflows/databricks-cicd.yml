@@ -13,10 +13,6 @@ on:
   pull_request:
     branches:
       - main
-    paths:
-      - "Databricks/**"
-      - "resources/**"
-      - "databricks.yml"
 
   workflow_dispatch:
 
