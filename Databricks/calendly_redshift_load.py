@@ -74,7 +74,7 @@ GOLD_EMPLOYEE_LOAD_PATH = (
     "s3://calendly-data-bkt/gold/employee_meeting_load/"
 )
 
-# COMMAND ----------
+# COMMAND -----------
 
 # =======================================================
 # 4. Read Gold Tables
