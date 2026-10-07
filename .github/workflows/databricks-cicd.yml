@@ -1,0 +1,34 @@
+name: Databricks CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "Databricks/**"
+      - ".github/workflows/databricks-cicd.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "Databricks/**"
+
+jobs:
+
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate Databricks Python files
+        run: |
+          find Databricks -name "*.py" -print -exec python -m py_compile {} \;

@@ -59,9 +59,5 @@ jobs:
       - name: Upload Wistia Glue script to S3
         run: |
           aws s3 cp \
-          glue/wistia-api-ingestion.py \
-          s3://aws-glue-assets-229378727976-us-east-2/scripts/wistia-api-ingestion.py
-
-      
-      
-      
+            glue/wistia-api-ingestion.py \
+            s3://aws-glue-assets-229378727976-us-east-2/scripts/wistia-api-ingestion.py
