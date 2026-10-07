@@ -94,5 +94,8 @@ jobs:
       - name: Run Wistia pipeline
         run: databricks bundle run -t dev wistia_pipeline
 
+      - name: Run Calendly pipeline
+        run: databricks bundle run -t dev calendly_pipeline
+
       - name: Show deployed resources
         run: databricks bundle summary -t dev
