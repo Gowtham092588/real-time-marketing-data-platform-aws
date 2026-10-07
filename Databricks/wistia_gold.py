@@ -63,7 +63,7 @@ visitors_df = spark.read.format("delta").load(
 # COMMAND ----------
 
 # ============================================
-#4. Build Gold MEDIA Performance
+# 4. Build Gold MEDIA Performance
 # ============================================
 gold_media_performance_df = (
     media_df.alias("m")
@@ -114,13 +114,14 @@ gold_media_performance_df = (
     )
 )
 
-print(gold_media_performance_df.show(10,False) )
+print(gold_media_performance_df.show(10, False))
 
 # COMMAND ----------
 
 # =============================================================================
-#5. Reusable Write Function to write Gold Table to S3 with Delta Merge Function 
+# 5. Reusable Write Function to write Gold Table to S3 with Delta Merge Function
 # =============================================================================
+
 
 def write_gold_table(
     source_df,
@@ -167,22 +168,23 @@ def write_gold_table(
 # COMMAND ----------
 
 # =======================================================
-#6. Write Gold Media Performance Table
+# 6. Write Gold Media Performance Table
 # =======================================================
 
+
 write_gold_table(
-    gold_media_performance_df, 
+    gold_media_performance_df,
     MEDIA_PERFORMANCE_GOLD_PATH,
     """
     target.media_id = source.media_id
     """
-    )
+)
 
 
 # COMMAND ----------
 
 # ============================================
-#4. Build Gold Visitor Engagement
+# 4. Build Gold Visitor Engagement
 # ============================================
 gold_visitor_engagement_df = (
     events_df.alias("e")
@@ -266,34 +268,35 @@ gold_visitor_engagement_df = (
 # COMMAND ----------
 
 # =======================================================
-#6. Write Gold Visitor Engagement Table
+# 6. Write Gold Visitor Engagement Table
 # =======================================================
 
 write_gold_table(
-    gold_visitor_engagement_df, 
+    gold_visitor_engagement_df,
     VISITOR_ENGAGEMENT_GOLD_PATH,
     """
     target.event_key = source.event_key
+    AND target.visitor_key = source.visitor_key
     """
-    )
+)
 
 # COMMAND ----------
 
 # =======================================================
-#11. Verify Gold Table
+# 11. Verify Gold Table
 # =======================================================
 
 media_performance_gold_df = (
-                            spark.read
-                            .format("delta")
-                            .load(MEDIA_PERFORMANCE_GOLD_PATH)
+    spark.read
+    .format("delta")
+    .load(MEDIA_PERFORMANCE_GOLD_PATH)
 )
 
 visitor_engagement_df = (
-                        spark
-                        .read
-                        .format("delta")
-                        .load(VISITOR_ENGAGEMENT_GOLD_PATH)
+    spark
+    .read
+    .format("delta")
+    .load(VISITOR_ENGAGEMENT_GOLD_PATH)
 )
 
 print(
@@ -303,38 +306,38 @@ print(
 
 print(
     "visitor_engagement:",
-   visitor_engagement_df.count()
+    visitor_engagement_df.count()
 )
 
 
 # COMMAND ----------
 
 # =======================================================
-#12. Business Key Verification
+# 12. Business Key Verification
 # =======================================================
 media_performance_duplicate_count = (
     media_performance_gold_df
     .groupBy("media_id",
              )
     .count()
-    .filter(F.col("count")>1)
+    .filter(F.col("count") > 1)
     .count()
 )
- 
-print(f"Duplicate media_performance business keys: {media_performance_duplicate_count}")
+
+print(
+    f"Duplicate media_performance business keys: {media_performance_duplicate_count}")
 
 
 visitor_engagement_duplicate_count = (
     gold_visitor_engagement_df
     .groupBy("event_key", "visitor_key")
     .count()
-    .filter(F.col("count")>1)
+    .filter(F.col("count") > 1)
     .count()
 )
 
-print(f"Duplicate visitor_engagement business keys: {visitor_engagement_duplicate_count}")
-
-
+print(
+    f"Duplicate visitor_engagement business keys: {visitor_engagement_duplicate_count}")
 
 
 # COMMAND ----------
