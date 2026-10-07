@@ -1,0 +1,29 @@
+resources:
+  jobs:
+    calendly_pipeline:
+      name: calendly-pipeline-dev
+
+      tasks:
+
+        - task_key: calendly_silver
+          notebook_task:
+            notebook_path: ../Databricks/calendly_silver.py
+
+        - task_key: marketing_spend_silver
+          notebook_task:
+            notebook_path: ../Databricks/marketing_spend_silver.py
+
+        - task_key: calendly_gold
+          depends_on:
+            - task_key: calendly_silver
+            - task_key: marketing_spend_silver
+
+          notebook_task:
+            notebook_path: ../Databricks/Calendly_Gold_Table.py
+
+        - task_key: calendly_redshift_load
+          depends_on:
+            - task_key: calendly_gold
+
+          notebook_task:
+            notebook_path: ../Databricks/calendly_redshift_load.py
