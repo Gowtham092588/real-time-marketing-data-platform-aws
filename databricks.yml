@@ -1,6 +1,9 @@
 bundle:
   name: real-time-marketing-data-platform-aws
 
+include:
+  - resources/*.yml
+
 targets:
   dev:
     mode: development

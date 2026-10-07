@@ -1,0 +1,32 @@
+resources:
+  jobs:
+    wistia_pipeline:
+      name: wistia-pipeline-dev
+
+      tasks:
+
+        - task_key: wistia_visitors_silver
+          notebook_task:
+            notebook_path: ../Databricks/wistia_visitors_silver.py
+
+        - task_key: wistia_events_silver
+          notebook_task:
+            notebook_path: ../Databricks/wistia_events_silver.py
+
+        - task_key: wistia_stats_silver
+          notebook_task:
+            notebook_path: ../Databricks/wistia_stats_silver.py
+
+        - task_key: wistia_media_silver
+          notebook_task:
+            notebook_path: ../Databricks/wistia_media_silver.py
+
+        - task_key: wistia_gold
+          depends_on:
+            - task_key: wistia_visitors_silver
+            - task_key: wistia_events_silver
+            - task_key: wistia_stats_silver
+            - task_key: wistia_media_silver
+
+          notebook_task:
+            notebook_path: ../Databricks/wistia_gold.py
