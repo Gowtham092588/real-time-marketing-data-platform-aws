@@ -31,20 +31,32 @@ jobs:
   # ---------------------------------------------------------
   validate:
     runs-on: ubuntu-latest
+    environment: dev
+
+    env:
+        DATABRICKS_AUTH_TYPE: github-oidc
+        DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+        DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
 
     steps:
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
 
-      - name: Validate Databricks Python files
-        run: |
-          find Databricks -name "*.py" -print -exec python -m py_compile {} \;
+    - name: Validate Databricks Python files
+      run: |
+        find Databricks -name "*.py" -print -exec python -m py_compile {} \;
+
+    - name: Install Databricks CLI
+      uses: databricks/setup-cli@main
+
+    - name: Validate Databricks bundle
+      run: databricks bundle validate -t dev
 
 
   # ---------------------------------------------------------
