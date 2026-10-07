@@ -50,12 +50,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials using OIDC
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::229378727976:role/GitHubActionsWistiaGlueDeployRole
-          aws-region: us-east-2
-      
       - name: Show GitHub OIDC claims
         shell: bash
         run: |
@@ -89,3 +83,11 @@ jobs:
           print("repository_owner_id =", claims.get("repository_owner_id"))
           print("ref =", claims.get("ref"))
           PY
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::229378727976:role/GitHubActionsWistiaGlueDeployRole
+          aws-region: us-east-2
+      
+      
