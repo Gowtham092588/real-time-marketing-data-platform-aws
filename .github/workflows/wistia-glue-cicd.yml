@@ -14,6 +14,10 @@ on:
     paths:
       - "glue/wistia-api-ingestion.py"
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
 
   validate:
@@ -46,11 +50,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::229378727976:role/GitHubActionsWistiaGlueDeployRole
           aws-region: us-east-2
 
       - name: Upload Wistia Glue script to S3
