@@ -50,14 +50,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Debug GitHub OIDC claims
+        uses: github/actions-oidc-debugger@main
+        with:
+          audience: sts.amazonaws.com
+
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::229378727976:role/GitHubActionsWistiaGlueDeployRole
           aws-region: us-east-2
-
-      - name: Upload Wistia Glue script to S3
-        run: |
-          aws s3 cp \
-          glue/wistia-api-ingestion.py \
-          s3://aws-glue-assets-229378727976-us-east-2/scripts/wistia-api-ingestion.py
