@@ -10,7 +10,7 @@
 
 import redshift_connector
 
-# COMMAND ----------
+# COMMAND ------------
 
 # =======================================================
 # 1. REDSHIFT CONFIGURATION
@@ -133,6 +133,7 @@ print("employee:", employee_df.count())
 # 5. LOAD STAGING TABLES INTO REDSHIFT
 # =======================================================
 
+
 def load_to_redshift(df, table_name):
 
     (
@@ -145,7 +146,7 @@ def load_to_redshift(df, table_name):
         .option("user", REDSHIFT_USER)
         .option("password", REDSHIFT_PASSWORD)
         .option("dbtable", table_name)
-        .option("batchsize","1000")
+        .option("batchsize", "1000")
         .save()
     )
 
@@ -153,7 +154,6 @@ def load_to_redshift(df, table_name):
         f"Loaded successfully: {table_name}"
     )
 
-    
 
 # COMMAND ----------
 
@@ -179,7 +179,7 @@ def validate_staging_table(table_name, business_key_columns):
         row_count = cursor.fetchone()[0]
         if row_count == 0:
             raise ValueError(f"Table {table_name} is empty")
-        
+
         null_condition = " OR ".join(
             [
                 f"{col} IS NULL"
@@ -192,8 +192,9 @@ def validate_staging_table(table_name, business_key_columns):
 
         null_count = cursor.fetchone()[0]
         if null_count > 0:
-            raise ValueError(f"Table {table_name} has null values in business key columns")
-        
+            raise ValueError(
+                f"Table {table_name} has null values in business key columns")
+
         key_list = ", ".join(business_key_columns)
         cursor.execute(
             f"""
@@ -224,10 +225,6 @@ def validate_staging_table(table_name, business_key_columns):
     finally:
         cursor.close()
         conn.close()
-
-
-
-        
 
 
 # COMMAND ----------
@@ -315,7 +312,7 @@ def merge_staging_to_gold(
         cursor.execute(
             f"TRUNCATE TABLE {staging_table};"
         )
-     
+
         conn.commit()
 
         print(
@@ -339,7 +336,6 @@ def merge_staging_to_gold(
 
         cursor.close()
         conn.close()
-
 
 
 # COMMAND ----------
@@ -380,6 +376,7 @@ def publish_gold_to_redshift(
     )
 
     print(f"Completed: {target_table}")
+
 
 publish_gold_to_redshift(
     df=channel_df,
@@ -529,7 +526,6 @@ publish_gold_to_redshift(
 print("Employee Meeting Details Published Successfully to Redshift")
 
 
-
 # COMMAND ----------
 
 # =======================================================
@@ -591,6 +587,7 @@ def execute_stored_procedures(procedure_names):
 # =======================================================
 # Refresh Calendly Dimensions and Facts
 # =======================================================
+
 
 execute_stored_procedures(
     [
