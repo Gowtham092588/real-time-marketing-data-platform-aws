@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "glue/wistia-api-ingestion.py"
+      - ".github/workflows/wistia-glue-cicd.yml"
 
   pull_request:
     branches:
@@ -16,7 +17,6 @@ on:
 jobs:
 
   validate:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -32,3 +32,29 @@ jobs:
       - name: Validate Python syntax
         run: |
           python -m py_compile glue/wistia-api-ingestion.py
+
+
+  deploy:
+    needs: validate
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Upload Wistia Glue script to S3
+        run: |
+          aws s3 cp \
+          glue/wistia-api-ingestion.py \
+          s3://aws-glue-assets-229378727976-us-east-2/scripts/wistia-api-ingestion.py
