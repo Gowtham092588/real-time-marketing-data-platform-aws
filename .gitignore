@@ -1,5 +1,15 @@
-.vscode/
-aws-glue-libs/
-.venv/
+# Environment variables / secrets
+.env
+.env.*
+
+# Python
 __pycache__/
 *.pyc
+.venv/
+venv/
+
+# IDE
+.vscode/
+
+# Local AWS Glue libraries
+aws-glue-libs/
