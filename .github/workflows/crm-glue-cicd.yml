@@ -1,0 +1,64 @@
+name: CRM Glue CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "glue/crm_glue_transformation.py"
+      - ".github/workflows/crm-glue-cicd.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "glue/crm_glue_transformation.py"
+      - ".github/workflows/crm-glue-cicd.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate CRM Glue Python syntax
+        run: |
+          python -m py_compile glue/crm_glue_transformation.py
+
+
+  deploy:
+    needs: validate
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::229378727976:role/GitHubActionsCRMGlueDeployRole
+          aws-region: us-east-2
+
+      - name: Upload CRM Glue script to S3
+        run: |
+          aws s3 cp \
+            glue/crm_glue_transformation.py \
+            s3://aws-glue-assets-229378727976-us-east-2/scripts/crm_glue_transformation.py
