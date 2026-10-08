@@ -1,0 +1,73 @@
+name: Streamlit CI/CD
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "streamlit/**"
+      - "requirements.txt"
+      - ".github/workflows/streamlit-cicd.yml"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "streamlit/**"
+      - "requirements.txt"
+      - ".github/workflows/streamlit-cicd.yml"
+
+permissions:
+  contents: read
+
+jobs:
+
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Upgrade pip
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r streamlit/requirements.txt
+
+      - name: Check Streamlit Python syntax
+        run: |
+          find streamlit -type f -name "*.py" \
+            -print \
+            -exec python -m py_compile {} \;
+
+      - name: Verify Streamlit import
+        run: |
+          python -c "import streamlit; print('Streamlit import successful')"
+
+      - name: Verify required packages
+        run: |
+          python -c "import pandas; print('pandas import successful')"
+          python -c "import redshift_connector; print('redshift_connector import successful')"
+
+  deploy:
+    needs: validate
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Deployment handled by Streamlit Cloud
+        run: |
+          echo "Validation passed."
+          echo "Streamlit Cloud will redeploy from the updated main branch."
