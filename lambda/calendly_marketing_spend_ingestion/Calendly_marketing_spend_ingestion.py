@@ -157,17 +157,17 @@ def lambda_handler(event, context):
 
         copied_files.append(file_name)
 
-        result = {
-            "available_files": len(available_files),
-            "skipped_files": len(skipped_files),
-            "copied_files": len(copied_files)
-        }
+    result = {
+        "available_files": len(available_files),
+        "skipped_files": len(skipped_files),
+        "copied_files": len(copied_files)
+    }
 
-        print(json.dumps(result))
+    print(json.dumps(result))
 
-        return {
-            "statusCode": 200,
-            "body": json.dumps(
-                result
-            )
-        }
+    return {
+        "statusCode": 200,
+        "body": json.dumps(
+            result
+        )
+    }
