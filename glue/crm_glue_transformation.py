@@ -59,9 +59,9 @@ logger = logging.getLogger(
 
 
 MERGE_SQL = """
-MERGE INTO staging.crm_leads 
-USING staging.crm_leads_load AS source
-ON staging.crm_leads.lead_id = source.lead_id
+MERGE INTO gold.crm_leads 
+USING staging.crm_leads AS source
+ON gold.crm_leads.lead_id = source.lead_id
 
 WHEN MATCHED THEN
 UPDATE SET
@@ -91,7 +91,14 @@ VALUES (
     source.funnel,
     source.date_created
 );
+
+CALL gold.sp_load_dim_lead();
+
+CALL gold.sp_load_dim_owner();
+
+CALL gold.sp_load_fact_crm_lead();
 """
+
 
 # =========================================================
 # PATHS
@@ -106,6 +113,10 @@ REDSHIFT_DATABASE = "marketingdb"
 REDSHIFT_TABLE = "staging.crm_leads"
 
 REDSHIFT_TEMP_DIR = "s3://crm-data-bkt/temp/redshift/crm/"
+
+DQ_ERROR_PATH = (
+    "s3://crm-data-bkt/dq_errors/crm/"
+)
 
 S3_BUCKET = "crm-data-bkt"
 
@@ -265,6 +276,49 @@ def save_checkpoint(last_processed_time):
     logger.info(
         "Checkpoint saved successfully: "
         f"{last_processed_time.isoformat()}"
+    )
+
+# =========================================================
+# CRM ROW LEVEL DATA QUALITY
+# =========================================================
+
+
+def add_crm_dq_errors(df):
+
+    return (
+        df.withColumn(
+            "dq_error_reason",
+
+            # -------------------------------------------------
+            # BUSINESS KEY
+            # -------------------------------------------------
+            F.when(
+                F.col("lead_id").isNull()
+                | (
+                    F.trim(
+                        F.col("lead_id")
+                    ) == ""
+                ),
+                F.lit("INVALID_BUSINESS_KEY")
+            )
+
+            # -------------------------------------------------
+            # REQUIRED CREATION TIMESTAMP
+            # -------------------------------------------------
+            .when(
+                F.col("date_created").isNull(),
+                F.lit("INVALID_DATE_CREATED")
+            )
+
+            .otherwise(
+                F.lit(None)
+            )
+        )
+
+        .withColumn(
+            "dq_error_timestamp",
+            F.current_timestamp()
+        )
     )
 
 # =========================================================
@@ -748,52 +802,113 @@ def main():
         )
 
         # =====================================================
-        # 4. REMOVE INVALID BUSINESS KEYS
+        # 4. ROW LEVEL DATA QUALITY / QUARANTINE
         # =====================================================
 
         logger.info(
-            "Checking invalid lead_id values"
+            "Starting CRM row-level data quality checks"
         )
 
-        invalid_source_lead_id_count = (
+        # -----------------------------------------------------
+        # Add DQ error reason
+        # -----------------------------------------------------
+
+        crm_validated_df = add_crm_dq_errors(
             crm_clean_df
-            .filter(
-                F.col("lead_id").isNull()
-                |
-                (
-                    F.trim(
-                        F.col("lead_id")
-                    )
-                    == ""
-                )
-            )
-            .count()
         )
 
-        if invalid_source_lead_id_count > 0:
+        # -----------------------------------------------------
+        # Invalid records
+        # -----------------------------------------------------
+
+        crm_bad_df = (
+            crm_validated_df
+
+            .filter(
+                F.col(
+                    "dq_error_reason"
+                ).isNotNull()
+            )
+        )
+
+        # -----------------------------------------------------
+        # Valid records
+        # -----------------------------------------------------
+
+        crm_good_df = (
+            crm_validated_df
+
+            .filter(
+                F.col(
+                    "dq_error_reason"
+                ).isNull()
+            )
+
+            .drop(
+                "dq_error_reason",
+                "dq_error_timestamp"
+            )
+        )
+
+        # -----------------------------------------------------
+        # Count rejected records
+        # -----------------------------------------------------
+
+        dq_error_count = crm_bad_df.count()
+
+        logger.info(
+            f"CRM DQ error row count: "
+            f"{dq_error_count}"
+        )
+
+        # -----------------------------------------------------
+        # Write rejected rows to quarantine
+        # -----------------------------------------------------
+
+        if dq_error_count > 0:
 
             logger.warning(
-                f"{invalid_source_lead_id_count} "
-                f"records contain invalid lead_id "
-                f"and will be removed"
+                f"{dq_error_count} CRM records failed "
+                f"data quality validation and will be "
+                f"written to quarantine"
             )
-
-        crm_clean_df = crm_clean_df.filter(
-
-            F.col(
-                "lead_id"
-            ).isNotNull()
-
-            &
 
             (
-                F.trim(
-                    F.col(
-                        "lead_id"
-                    )
+                crm_bad_df
+
+                .write
+
+                .mode("append")
+
+                .format("parquet")
+
+                .save(
+                    DQ_ERROR_PATH
                 )
-                != ""
             )
+
+            logger.info(
+                f"CRM DQ errors written successfully to: "
+                f"{DQ_ERROR_PATH}"
+            )
+
+        else:
+
+            logger.info(
+                "No CRM DQ errors detected"
+            )
+
+        # -----------------------------------------------------
+        # Continue pipeline only with valid rows
+        # -----------------------------------------------------
+
+        crm_clean_df = crm_good_df
+
+        valid_row_count = crm_clean_df.count()
+
+        logger.info(
+            f"CRM valid row count after DQ checks: "
+            f"{valid_row_count}"
         )
 
         # =====================================================
@@ -1437,15 +1552,15 @@ def main():
             catalog_connection="crm-redshift-connection",
             connection_options={
                 "database": "marketingdb",
-                "dbtable": "staging.crm_leads_load",
-                "preactions": "DELETE FROM staging.crm_leads_load;",
+                "dbtable": "staging.crm_leads",
+                "preactions": "DELETE FROM staging.crm_leads;",
                 "postactions": MERGE_SQL
             },
             redshift_tmp_dir=REDSHIFT_TEMP_DIR
         )
 
         logger.info(
-            "CRM Transform data written successfully to crm_leads_load"
+            "CRM Transform data written successfully to crm_leads"
         )
 
         if latest_modified_time:
