@@ -124,7 +124,7 @@ def get_employee_meeting_load():
 
     query = """
          SELECT *
-        FROM gold.vw_employee_meeting_load
+        FROM gold.vm_employee_meeting_load
         ORDER BY week_start_date, employee_name;
     """
     return run_query(query)
@@ -134,7 +134,7 @@ def get_calendly_crm_analysis():
 
     query = """
         SELECT *
-        FROM gold.vw_calendly_crm_analysis;
+        FROM gold.vm_calendly_crm_analysis;
     """
 
     return run_query(query)
@@ -144,7 +144,7 @@ def get_wistia_engagement():
 
     query = """
         SELECT *
-        FROM gold.vw_wistia_engagement
+        FROM gold.vm_wistia_engagement
         ORDER BY event_timestamp;
     """
 
@@ -155,7 +155,7 @@ def get_wistia_visitors():
 
     query = """
         SELECT *
-        FROM gold.vw_wistia_visitors
+        FROM gold.vm_wistia_visitors
         ORDER BY engagement_events DESC;
     """
 
@@ -166,7 +166,7 @@ def get_cross_platform_analysis():
 
     query = """
         SELECT *
-        FROM gold.vw_cross_platform_analysis
+        FROM gold.vm_cross_platform_analysis
         ORDER BY report_date;
     """
 
