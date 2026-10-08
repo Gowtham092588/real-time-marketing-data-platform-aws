@@ -1,3 +1,5 @@
 .vscode/
-.env
+aws-glue-libs/
 .venv/
+__pycache__/
+*.pyc

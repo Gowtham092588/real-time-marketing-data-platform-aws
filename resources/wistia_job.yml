@@ -6,18 +6,26 @@ resources:
       tasks:
 
         - task_key: wistia_visitors_silver
+          depends_on:
+            - task_key: wistia_api_ingestion
           notebook_task:
             notebook_path: ../Databricks/wistia_visitors_silver.py
 
         - task_key: wistia_events_silver
+          depends_on:
+            - task_key: wistia_api_ingestion
           notebook_task:
             notebook_path: ../Databricks/wistia_events_silver.py
 
         - task_key: wistia_stats_silver
+          depends_on:
+            - task_key: wistia_api_ingestion
           notebook_task:
             notebook_path: ../Databricks/wistia_stats_silver.py
 
         - task_key: wistia_media_silver
+          depends_on:
+            - task_key: wistia_api_ingestion
           notebook_task:
             notebook_path: ../Databricks/wistia_media_silver.py
 

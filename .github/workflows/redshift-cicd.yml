@@ -1,0 +1,172 @@
+name: Redshift CI/CD
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "redshift/**"
+      - ".github/workflows/redshift-cicd.yml"
+
+  push:
+    branches:
+      - main
+    paths:
+      - "redshift/**"
+      - ".github/workflows/redshift-cicd.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+
+  # =========================================================
+  # CI - Validate Redshift SQL files
+  # =========================================================
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Redshift SQL files
+        shell: bash
+        run: |
+          echo "Checking Redshift SQL files..."
+
+          SQL_FILES=$(find redshift -type f -name "*.sql" 2>/dev/null || true)
+
+          if [ -z "$SQL_FILES" ]; then
+            echo "No SQL files found under redshift/"
+            exit 1
+          fi
+
+          echo "SQL files found:"
+          echo "$SQL_FILES"
+
+          echo "Redshift SQL validation completed successfully."
+
+
+  # =========================================================
+  # CD - Deploy Redshift objects
+  # =========================================================
+  deploy:
+    needs: validate
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    environment: dev
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::229378727976:role/GitHubActionsRedshiftDeployRole
+          aws-region: us-east-2
+
+      - name: Deploy Redshift SQL files
+        shell: bash
+        env:
+          REDSHIFT_DATABASE: ${{ vars.REDSHIFT_DATABASE }}
+          REDSHIFT_WORKGROUP: ${{ vars.REDSHIFT_WORKGROUP }}
+
+        run: |
+
+          execute_sql_file() {
+
+              FILE=$1
+
+              echo ""
+              echo "=============================================="
+              echo "Deploying: $FILE"
+              echo "=============================================="
+
+              SQL=$(cat "$FILE")
+
+              STATEMENT_ID=$(aws redshift-data execute-statement \
+                  --workgroup-name "$REDSHIFT_WORKGROUP" \
+                  --database "$REDSHIFT_DATABASE" \
+                  --sql "$SQL" \
+                  --query Id \
+                  --output text)
+
+              echo "Statement ID: $STATEMENT_ID"
+
+              while true
+              do
+
+                  STATUS=$(aws redshift-data describe-statement \
+                      --id "$STATEMENT_ID" \
+                      --query Status \
+                      --output text)
+
+                  echo "Status: $STATUS"
+
+                  if [ "$STATUS" = "FINISHED" ]; then
+
+                      echo "Successfully deployed: $FILE"
+
+                      break
+                  fi
+
+                  if [ "$STATUS" = "FAILED" ]; then
+
+                      echo "Deployment failed: $FILE"
+
+                      aws redshift-data describe-statement \
+                          --id "$STATEMENT_ID"
+
+                      exit 1
+                  fi
+
+                  if [ "$STATUS" = "ABORTED" ]; then
+
+                      echo "Deployment aborted: $FILE"
+
+                      exit 1
+                  fi
+
+                  sleep 5
+
+              done
+          }
+
+
+          # =====================================================
+          # Deploy objects in dependency order
+          # =====================================================
+
+          for folder in \
+              redshift/01_staging_tables \
+              redshift/02_gold_tables \
+              redshift/03_stored_procedures \
+              redshift/04_views \
+              redshift/05_grants
+          do
+
+              if [ -d "$folder" ]; then
+
+                  echo ""
+                  echo "Processing folder: $folder"
+
+                  for file in "$folder"/*.sql
+                  do
+
+                      if [ -f "$file" ]; then
+                          execute_sql_file "$file"
+                      fi
+
+                  done
+
+              fi
+
+          done

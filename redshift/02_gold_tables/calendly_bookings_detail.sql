@@ -1,0 +1,26 @@
+CREATE TABLE IF NOT EXISTS gold.calendly_bookings_detail
+(
+    webhook_event        VARCHAR(100),
+    invitee_name         VARCHAR(255),
+    invitee_email        VARCHAR(255),
+    invitee_status       VARCHAR(100),
+    invitee_timezone     VARCHAR(100),
+    rescheduled          BOOLEAN,
+    invitee_created_at   TIMESTAMP,
+    invitee_updated_at   TIMESTAMP,
+    event_name           VARCHAR(500),
+    event_status         VARCHAR(100),
+    event_start_time     TIMESTAMP,
+    event_end_time       TIMESTAMP,
+    event_created_at     TIMESTAMP,
+    event_updated_at     TIMESTAMP,
+    utm_source           VARCHAR(255),
+    utm_medium           VARCHAR(255),
+    utm_campaign         VARCHAR(500),
+    utm_content          VARCHAR(500),
+    utm_term             VARCHAR(500),
+    invitee_id           VARCHAR(255),
+    scheduled_event_id   VARCHAR(255),
+    event_type_id        VARCHAR(255),
+    marketing_channel    VARCHAR(100)
+);

@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS staging.wistia_visitor_engagement (
+    event_key            VARCHAR(500),
+    event_timestamp      TIMESTAMP,
+    visitor_key          VARCHAR(500),
+    visitor_name         VARCHAR(500),
+    visitor_email        VARCHAR(500),
+    organization_name    VARCHAR(500),
+    media_id             VARCHAR(100),
+    media_name           VARCHAR(500),
+    percent_viewed       DOUBLE PRECISION,
+    percent_viewed_pct   DOUBLE PRECISION,
+    city                 VARCHAR(255),
+    region               VARCHAR(255),
+    country              VARCHAR(100),
+    browser              VARCHAR(255),
+    mobile               BOOLEAN,
+    platform             VARCHAR(255),
+    visitor_play_count   BIGINT,
+    visitor_load_count   BIGINT,
+    load_timestamp       TIMESTAMP
+);
