@@ -1,0 +1,146 @@
+name: Lambda CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "lambda/**"
+      - ".github/workflows/lambda-cicd.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "lambda/**"
+      - ".github/workflows/lambda-cicd.yml"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+
+  # =========================================================
+  # CI - Validate Lambda Python files
+  # =========================================================
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Validate Lambda Python syntax
+        run: |
+          python -m py_compile lambda/calendly_marketing_spend_ingestion/Calendly_marketing_spend_ingestion.py
+          python -m py_compile lambda/calendly_webhook_handler/calendly_webhook_handler.py
+          python -m py_compile lambda/crm_glue_trigger/crm_glue_trigger.py
+          python -m py_compile lambda/crm_lead_enrich/crm_lead_enrich.py
+          python -m py_compile lambda/crm_webhook_handler/crm_webhook_handler.py
+
+
+  # =========================================================
+  # CD - Deploy Lambda functions
+  # =========================================================
+  deploy:
+    needs: validate
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::229378727976:role/GitHubActionsLambdaDeployRole
+          aws-region: us-east-2
+
+
+      # -----------------------------------------------------
+      # Calendly Webhook
+      # -----------------------------------------------------
+      - name: Package Calendly webhook Lambda
+        run: |
+          cd lambda/calendly_webhook_handler
+          zip ../../calendly-webhook-handler.zip calendly_webhook_handler.py
+          cd ../..
+
+      - name: Deploy Calendly webhook Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name calendly-webhook-handler \
+            --zip-file fileb://calendly-webhook-handler.zip
+
+
+      # -----------------------------------------------------
+      # Calendly Marketing Spend
+      # -----------------------------------------------------
+      - name: Package Calendly marketing spend Lambda
+        run: |
+          cd lambda/calendly_marketing_spend_ingestion
+          zip ../../calendly-market-spend.zip Calendly_marketing_spend_ingestion.py
+          cd ../..
+
+      - name: Deploy Calendly marketing spend Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name Calendly-Market-Spend-Ingestion \
+            --zip-file fileb://calendly-market-spend.zip
+
+
+      # -----------------------------------------------------
+      # CRM Webhook
+      # -----------------------------------------------------
+      - name: Package CRM webhook Lambda
+        run: |
+          cd lambda/crm_webhook_handler
+          zip ../../crm-webhook-handler.zip crm_webhook_handler.py
+          cd ../..
+
+      - name: Deploy CRM webhook Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name crm-webhook-handler \
+            --zip-file fileb://crm-webhook-handler.zip
+
+
+      # -----------------------------------------------------
+      # CRM Lead Enrichment
+      # -----------------------------------------------------
+      - name: Package CRM lead enrichment Lambda
+        run: |
+          cd lambda/crm_lead_enrich
+          zip ../../crm-lead-enrich.zip crm_lead_enrich.py
+          cd ../..
+
+      - name: Deploy CRM lead enrichment Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name crm-lead-enrich \
+            --zip-file fileb://crm-lead-enrich.zip
+
+
+      # -----------------------------------------------------
+      # CRM Glue Trigger
+      # -----------------------------------------------------
+      - name: Package CRM Glue trigger Lambda
+        run: |
+          cd lambda/crm_glue_trigger
+          zip ../../crm-glue-trigger.zip crm_glue_trigger.py
+          cd ../..
+
+      - name: Deploy CRM Glue trigger Lambda
+        run: |
+          aws lambda update-function-code \
+            --function-name crm-glue-trigger \
+            --zip-file fileb://crm-glue-trigger.zip
