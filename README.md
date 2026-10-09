@@ -25,10 +25,10 @@ The platform supports both real-time webhook ingestion and scheduled batch inges
 - Streamlit Cloud dashboard for marketing analytics.
 - GitHub Actions CI/CD for Glue, Lambda, Databricks, Redshift, and Streamlit.
 - Secure deployments using GitHub OIDC, IAM roles, and Databricks service principal.
-- 
+
 ## 🏛️ Architecture
 
-![Real-Time Marketing Data Platform Architecture](Downloads/End-to-End Platform Architecture.png)
+<img width="1443" height="1096" alt="image" src="https://github.com/user-attachments/assets/d3e8eac8-78a3-4154-993f-2aeb66e6cd89" />
 
 ## 🔄 Data Pipeline
 
