@@ -32,19 +32,22 @@ The platform supports both real-time webhook ingestion and scheduled batch inges
 
 ## 🔄 Data Pipeline
 
-Wistia
+# Wistia
+
 Wistia API → EventBridge → AWS Glue → Amazon S3 → Databricks → Redshift
 - EventBridge triggers scheduled Wistia API ingestion.
 - AWS Glue extracts data and stores it in S3.
 - Databricks transforms Wistia data and loads it into Redshift.
-- 
-Calendly
+  
+# Calendly
+
 Calendly Webhook → API Gateway → Lambda → Amazon S3 → Databricks → Redshift
 - Calendly webhook events are captured through API Gateway and Lambda.
 - Marketing spend is loaded separately through scheduled EventBridge/Lambda ingestion.
 - Databricks transforms Calendly and marketing-spend data before loading Redshift.
-- 
-CRM / Salesforce
+  
+# CRM / Salesforce
+
 Salesforce CRM → API Gateway → Lambda → Source S3 → SQS → Lambda Enrichment → Target S3 → AWS Glue → Redshift
 - CRM events are stored as raw files in Source S3.
 - Amazon SQS decouples ingestion from enrichment and uses a DLQ for failures.
@@ -60,7 +63,7 @@ Amazon Redshift Serverless uses two main schemas:
   - Aggregate tables
   - Views
   - Stored procedures
-Streamlit queries curated Redshift views for the latest dashboard data.
+- Streamlit queries curated Redshift views for the latest dashboard data.
 
 ## 📊 Marketing Analytics Dashboard
 The Streamlit dashboard includes:
@@ -78,7 +81,7 @@ The Streamlit dashboard includes:
 - Amazon SQS / DLQ handles CRM event buffering and failures.
 - Amazon CloudWatch provides logging and monitoring.
 - AWS Secrets Manager stores secure credentials.
-- 
+
 ## 🚀 CI/CD
 GitHub Actions is used to:
 - Validate Python, SQL, and Databricks configuration.
@@ -116,9 +119,9 @@ GitHub Actions is used to:
 - Used OIDC and service identities instead of long-lived deployment secrets.
   
 ## 🔗 Project Links
-GitHub Repository:
+- GitHub Repository:
 https://github.com/Gowtham092588/real-time-marketing-data-platform-aws.git
-Live Streamlit Dashboard:
+- Live Streamlit Dashboard:
 https://real-time-marketing-data-platform-awsgit-duxzyyawyeztva58gvcpj.streamlit.app/
 
 ## 💻 Author
