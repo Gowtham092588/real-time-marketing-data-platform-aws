@@ -127,4 +127,4 @@ https://real-time-marketing-data-platform-awsgit-duxzyyawyeztva58gvcpj.streamlit
 ## 💻 Author
 Gowtham Kethineni
 
-LinkedIn
+[LinkedIn](https://www.linkedin.com/in/gowtham-kethineni)
