@@ -12,7 +12,7 @@ The platform supports both real-time webhook ingestion and scheduled batch inges
 - Analyze employee meeting load and booking patterns.
 - Measure Wistia video and visitor engagement.
 - Provide cross-platform reporting across spend, bookings, CRM leads, and Wistia activity.
-- 
+
 ## 🚀 Project Highlights
 - Real-time ingestion using API Gateway + AWS Lambda.
 - Scheduled batch ingestion using Amazon EventBridge.
@@ -126,4 +126,5 @@ https://real-time-marketing-data-platform-awsgit-duxzyyawyeztva58gvcpj.streamlit
 
 ## 💻 Author
 Gowtham Kethineni
+
 LinkedIn
